@@ -1,0 +1,12 @@
+#include "gpio.h"
+
+void GPIO_PWMLed1_Init(void) {
+    RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
+
+    GPIOA->MODER &= ~GPIO_MODER_MODER6;
+    GPIOA->MODER |= GPIO_MODER_MODER6_1;
+
+    GPIOA->AFR[0] |= (2 << GPIO_AFRL_AFRL6_Pos);
+
+    GPIOA->OSPEEDR |= GPIO_OSPEEDER_OSPEEDR6;
+}
