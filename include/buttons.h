@@ -7,6 +7,8 @@
 void Button_Init(void);
 int Button_IsPressed(void);
 
+void Button_ClickManagerHandler(void);
+
 extern void ButtonClicked(void);
 extern void ButtonDoubleClicked(void);
 extern void ButtonLongPressed(void);

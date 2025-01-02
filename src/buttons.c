@@ -28,7 +28,7 @@ int Button_IsPressed(void) {
     return BUTTON_PRESSED;
 }
 
-void TIM2_IRQHandler(void) {
+void Button_ClickManagerHandler(void) {
     static int pressed_counter = 0;
     static int unpressed_counter = 0;
     static int was_pressed = FALSE;
