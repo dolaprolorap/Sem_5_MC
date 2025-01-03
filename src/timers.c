@@ -1,26 +1,5 @@
 #include "timers.h"
 
-// static inline void TIM3_Init(void) {
-//     RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;
-//     TIM3->ARR = PWM_TIMER_ARR;
-//     TIM3->PSC = 0;
-
-//     //Generate an update event to reload the Prescaler
-//     //and the repetition counter value (if applicable) immediately
-//     TIM3->EGR |= TIM_EGR_UG;
-//     //Select the Output Compare Mode
-//     TIM3->CCMR1 &= ~TIM_CCMR1_OC1M;
-//     TIM3->CCMR1 |= TIM_CCMR1_OC1M_2 | TIM_CCMR1_OC1M_1;
-//     //CH1 Enable Preload
-//     TIM3->CCMR1 |= TIM_CCMR1_OC1PE;
-//     //Set the Output Compare Polarity (active - is high level)
-//     TIM3->CCER &= ~TIM_CCER_CC1P;
-//     //Set the Output State
-//     TIM3->CCER |= TIM_CCER_CC1E;
-//     //Set the Capture Compare Registers value
-//     TIM3->CCR1 = 30000;
-// }
-
 static int tim_info_index = 0;
 
 static int dir_pwm1 = PWM_DIR_FORWARD;
@@ -69,17 +48,45 @@ struct TIMInfo tims[] = {
     },
 };
 
-// 10 milliseconds
+// 10 milliseconds timer
 static inline void TIM2_Init(void) {
     RCC->APB1ENR |= RCC_APB1ENR_TIM2EN;
     NVIC_EnableIRQ(TIM2_IRQn);
     TIM2->PSC = 15;
     TIM2->ARR = 10000;
+
+    TIM_EnableCounter(TIM2);
+    TIM_EnableIT_UPDATE(TIM2);
 }
 
 static inline void TIM_PWM_Enable(struct TIMInfo* tim_info) {
     tim_info->tim->CCER &= ~tim_info->ccer_msk;
     tim_info->tim->CCER |= tim_info->ccer;
+}
+
+static inline void TIM_PWMs_Init(void) {
+    RCC->APB2ENR |= RCC_APB2ENR_TIM1EN;
+    RCC->APB1ENR |= RCC_APB1ENR_TIM5EN;
+
+    for (int i = 0; i < TIMERS_COUNT; i++) {
+        tims[i].tim->ARR = PWM_TIMER_ARR;
+        tims[i].tim->PSC = 0;
+        tims[i].tim->EGR |= TIM_EGR_UG;
+
+        tims[i].tim->CCMR1 &= ~tims[i].ccmr1_msk;
+        tims[i].tim->CCMR1 |= tims[i].ccmr1;
+
+        tims[i].tim->CCMR2 &= ~tims[i].ccmr2_msk;
+        tims[i].tim->CCMR2 |= tims[i].ccmr2;
+    }
+
+    TIM_EnableCounter(TIM1);
+    TIM_EnableCounter(TIM5);
+
+    TIM1->BDTR |= TIM_BDTR_MOE;
+
+    TIM_PWM_Enable(&tims[tim_info_index % TIMERS_COUNT]);
+    TIM_PWM_Enable(&tims[(tim_info_index + 1) % TIMERS_COUNT]);
 }
 
 static inline void TIM_PWM_Disable(struct TIMInfo* tim_info) {
@@ -126,29 +133,5 @@ void Change_PWM_TIMs(void) {
 
 void TIMs_Init(void) {
     TIM2_Init();
-
-    TIM_EnableCounter(TIM2);
-    TIM_EnableIT_UPDATE(TIM2);
-
-    RCC->APB2ENR |= RCC_APB2ENR_TIM1EN;
-    RCC->APB1ENR |= RCC_APB1ENR_TIM5EN;
-
-    for (int i = 0; i < TIMERS_COUNT; i++) {
-        tims[i].tim->ARR = PWM_TIMER_ARR;
-        tims[i].tim->PSC = 0;
-        tims[i].tim->EGR |= TIM_EGR_UG;
-
-        tims[i].tim->CCMR1 &= ~tims[i].ccmr1_msk;
-        tims[i].tim->CCMR1 |= tims[i].ccmr1;
-
-        tims[i].tim->CCMR2 &= ~tims[i].ccmr2_msk;
-        tims[i].tim->CCMR2 |= tims[i].ccmr2;
-    }
-
-    TIM_EnableCounter(TIM1);
-    TIM_EnableCounter(TIM5);
-
-    TIM1->BDTR |= TIM_BDTR_MOE;
-
-    Change_PWM_TIMs();
+    TIM_PWMs_Init();
 }

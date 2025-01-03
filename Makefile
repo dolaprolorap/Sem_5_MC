@@ -6,7 +6,7 @@ BINDIR = ./bin
 INCDIR = ./include
 
 # Files
-SRCS = ./src/main.c ./src/usart.c ./src/timers.c ./src/buttons.c ./src/gpio.c ./src/leds.c ./src/inter.c
+SRCS = ./src/main.c ./src/usart.c ./src/timers.c ./src/buttons.c ./src/gpio.c ./src/inter.c
 CMSIS_SRCS = $(CMSIS_TEMPLATES)/system_stm32f7xx.c
 CMSIS_ASMS = $(CMSIS_TEMPLATES)/gcc/startup_stm32f767xx.s
 OBJS = $(SRCS:./src/%.c=$(BINDIR)/%.o) \

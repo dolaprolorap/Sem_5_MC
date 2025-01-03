@@ -3,9 +3,11 @@
 
 #include "stm32f767xx.h"
 
-void GPIO_PWMLed1_Init(void);
-void GPIO_PWMLed2_Init(void);
-void GPIO_PWMLed3_Init(void);
-void GPIO_PWMLed4_Init(void);
+#define GPIO_COUNT 4
+
+void Change_GPIOs(void);
+void GPIO_Init(void);
+void Toggle_FirstBlinkingLED(void);
+void Toggle_SecondBlinkingLED(void);
 
 #endif
