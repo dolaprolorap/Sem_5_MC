@@ -20,8 +20,6 @@ void Button_Init(void) {
     GPIOC->PUPDR &= ~(GPIO_PUPDR_PUPDR13_0 | GPIO_PUPDR_PUPDR13_1);
     GPIOC->PUPDR |= GPIO_PUPDR_PUPDR13_1;
     GPIOC->OSPEEDR |= GPIO_OSPEEDER_OSPEEDR13;
-
-    TIM_ClickManager_Init();
 }
 
 int Button_IsPressed(void) {

@@ -27,8 +27,10 @@ static inline void Leds_ShiftSecondStatus(void) {
 }
 
 void Leds_Init(void) {
-    TIM_PWM1_Init();
     GPIO_PWMLed1_Init();
+    GPIO_PWMLed2_Init();
+    GPIO_PWMLed3_Init();
+    GPIO_PWMLed4_Init();
 
     switch(current_status) {
         case FIRST_STATUS:
