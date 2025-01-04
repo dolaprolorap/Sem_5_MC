@@ -3,6 +3,8 @@
 
 #include "stm32f767xx.h"
 #include "timers.h"
+#include "inter.h"
+#include "general.h"
 
 void Button_Init(void);
 int Button_IsPressed(void);

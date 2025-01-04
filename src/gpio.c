@@ -1,11 +1,22 @@
 #include "gpio.h"
 
-static int gpio_info_index = 0;
+#define SLOW_PWM_INDEX (first_mode_index % GPIO_COUNT)
+#define FAST_PWM_INDEX ((first_mode_index + 1) % GPIO_COUNT)
+#define SLOW_BLINKING_INDEX ((first_mode_index + 2) % GPIO_COUNT)
+#define FAST_BLINKING_INDEX ((first_mode_index + 3) % GPIO_COUNT)
+
+#define CURRENT_BLINKING_INDEX (second_mode_index % GPIO_COUNT)
+#define NEXT_BLINKING_INDEX ((second_mode_index + 1) % GPIO_COUNT)
+
+#define INCREMENT_INDEX(index) (index = (index + 1) % GPIO_COUNT)
+
+static int first_mode_index = 0;
+static int second_mode_index = 0;
 
 struct GPIOInitInfo {
     void (*init_as_gpio)(void);
     void (*init_as_pwm)(void);
-    void (*toggler)(void);
+    void (*toggler)(int);
 };
 
 static void PA0_Init_AsGPIO(void) {
@@ -64,20 +75,64 @@ static void PE11_Init_AsPWM(void) {
     GPIOE->AFR[1] |= (1 << GPIO_AFRH_AFRH3_Pos);
 }
 
-static void PA0_Toggle(void) {
-    GPIOA->ODR ^= GPIO_ODR_OD0;
+static void PA0_Toggle(int val) {
+    switch (val)
+    {
+    case TRUE:
+        GPIOA->ODR |= GPIO_ODR_OD0;
+        break;
+    case FALSE:
+        GPIOA->ODR &= ~GPIO_ODR_OD0;
+        break;
+    case NULL:
+        GPIOA->ODR ^= GPIO_ODR_OD0;
+        break;
+    }
 }
 
-static void PE9_Toggle(void) {
-    GPIOE->ODR ^= GPIO_ODR_OD9;
+static void PE9_Toggle(int val) {
+    switch (val)
+    {
+    case TRUE:
+        GPIOE->ODR |= GPIO_ODR_OD9;
+        break;
+    case FALSE:
+        GPIOE->ODR &= ~GPIO_ODR_OD9;
+        break;
+    case NULL:
+        GPIOE->ODR ^= GPIO_ODR_OD9;
+        break;
+    }
 }
 
-static void PA3_Toggle(void) {
-    GPIOA->ODR ^= GPIO_ODR_OD3;
+static void PA3_Toggle(int val) {
+    switch (val)
+    {
+    case TRUE:
+        GPIOA->ODR |= GPIO_ODR_OD3;
+        break;
+    case FALSE:
+        GPIOA->ODR &= ~GPIO_ODR_OD3;
+        break;
+    case NULL:
+        GPIOA->ODR ^= GPIO_ODR_OD3;
+        break;
+    }
 }
 
-static void PE11_Toggle(void) {
-    GPIOE->ODR ^= GPIO_ODR_OD11;
+static void PE11_Toggle(int val) {
+    switch (val)
+    {
+    case TRUE:
+        GPIOE->ODR |= GPIO_ODR_OD11;
+        break;
+    case FALSE:
+        GPIOE->ODR &= ~GPIO_ODR_OD11;
+        break;
+    case NULL:
+        GPIOE->ODR ^= GPIO_ODR_OD11;
+        break;
+    }
 }
 
 // PA0 - TIM5_CH1
@@ -92,25 +147,46 @@ static struct GPIOInitInfo init_info[] = {
     { &PE11_Init_AsGPIO, &PE11_Init_AsPWM, &PE11_Toggle },
 };
 
-void Change_GPIOs(void) {
-    int to_gpio_index = gpio_info_index % GPIO_COUNT; 
-    int to_pwm_index = (gpio_info_index + 2) % GPIO_COUNT; 
-
-    init_info[to_gpio_index].init_as_gpio();
-    init_info[to_pwm_index].init_as_pwm();
-
-    gpio_info_index = (gpio_info_index + 1) % GPIO_COUNT;
+void GPIO_SetFirstMode(void) {
+    init_info[SLOW_PWM_INDEX].init_as_pwm();
+    init_info[FAST_PWM_INDEX].init_as_pwm();
+    init_info[SLOW_BLINKING_INDEX].init_as_gpio();
+    init_info[FAST_BLINKING_INDEX].init_as_gpio();
 }
 
-void Toggle_FirstBlinkingLED(void) {
-    init_info[(gpio_info_index + 2) % GPIO_COUNT].toggler();
+void GPIO_SetSecondMode(void) {
+    for (int i = 0; i < GPIO_COUNT; i++) {
+        init_info[i].init_as_gpio();
+        init_info[i].toggler(FALSE);
+    }
+
+    init_info[CURRENT_BLINKING_INDEX].toggler(TRUE);
 }
 
-void Toggle_SecondBlinkingLED(void) {
-    init_info[(gpio_info_index + 3) % GPIO_COUNT].toggler();
+void GPIO_SwitchLEDsFirstMode(void) {
+    INCREMENT_INDEX(first_mode_index);
+    GPIO_SetFirstMode();
 }
 
-void GPIO_Init(void) {
+void GPIO_SwitchLEDsSecondMode(void) {
+
+}
+
+void GPIO_LightNextLEDInChain(void) {
+    init_info[CURRENT_BLINKING_INDEX].toggler(NULL);
+    INCREMENT_INDEX(second_mode_index);
+    init_info[CURRENT_BLINKING_INDEX].toggler(NULL);
+}
+
+void GPIO_ToggleFirstBlinkingLED(void) {
+    init_info[SLOW_BLINKING_INDEX].toggler(NULL);
+}
+
+void GPIO_ToggleSecondBlinkingLED(void) {
+    init_info[FAST_BLINKING_INDEX].toggler(NULL);
+}
+
+void GPIO_InitLEDs(void) {
     RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
     RCC->AHB1ENR |= RCC_AHB1ENR_GPIOEEN;
 
@@ -118,9 +194,4 @@ void GPIO_Init(void) {
     GPIOE->OSPEEDR |= GPIO_OSPEEDER_OSPEEDR9;
     GPIOA->OSPEEDR |= GPIO_OSPEEDER_OSPEEDR3;
     GPIOE->OSPEEDR |= GPIO_OSPEEDER_OSPEEDR11;
-
-    init_info[0].init_as_pwm();
-    init_info[1].init_as_pwm();
-    init_info[2].init_as_gpio();
-    init_info[3].init_as_gpio();
 }

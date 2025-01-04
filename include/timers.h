@@ -35,4 +35,7 @@ void TIMs_PWM_ChangeDutyCicle(void);
 void Change_PWM_TIMs(void);
 void TIMs_Init(void);
 
+void TIM_PWMTIMsInit(void);
+void TIM_DelayTIMInit(void);
+
 #endif

@@ -48,47 +48,6 @@ struct TIMInfo tims[] = {
     },
 };
 
-// 10 milliseconds timer
-static inline void TIM2_Init(void) {
-    RCC->APB1ENR |= RCC_APB1ENR_TIM2EN;
-    NVIC_EnableIRQ(TIM2_IRQn);
-    TIM2->PSC = 15;
-    TIM2->ARR = 10000;
-
-    TIM_EnableCounter(TIM2);
-    TIM_EnableIT_UPDATE(TIM2);
-}
-
-static inline void TIM_PWM_Enable(struct TIMInfo* tim_info) {
-    tim_info->tim->CCER &= ~tim_info->ccer_msk;
-    tim_info->tim->CCER |= tim_info->ccer;
-}
-
-static inline void TIM_PWMs_Init(void) {
-    RCC->APB2ENR |= RCC_APB2ENR_TIM1EN;
-    RCC->APB1ENR |= RCC_APB1ENR_TIM5EN;
-
-    for (int i = 0; i < TIMERS_COUNT; i++) {
-        tims[i].tim->ARR = PWM_TIMER_ARR;
-        tims[i].tim->PSC = 0;
-        tims[i].tim->EGR |= TIM_EGR_UG;
-
-        tims[i].tim->CCMR1 &= ~tims[i].ccmr1_msk;
-        tims[i].tim->CCMR1 |= tims[i].ccmr1;
-
-        tims[i].tim->CCMR2 &= ~tims[i].ccmr2_msk;
-        tims[i].tim->CCMR2 |= tims[i].ccmr2;
-    }
-
-    TIM_EnableCounter(TIM1);
-    TIM_EnableCounter(TIM5);
-
-    TIM1->BDTR |= TIM_BDTR_MOE;
-
-    TIM_PWM_Enable(&tims[tim_info_index % TIMERS_COUNT]);
-    TIM_PWM_Enable(&tims[(tim_info_index + 1) % TIMERS_COUNT]);
-}
-
 static inline void TIM_PWM_Disable(struct TIMInfo* tim_info) {
     tim_info->tim->CCER &= ~tim_info->ccer_msk;
 }
@@ -116,6 +75,47 @@ static inline void TIM_PWM_ChangeDutyCicle(int* dir, int duty_per_cicle, struct 
     }
 }
 
+static inline void TIM_PWM_Enable(struct TIMInfo* tim_info) {
+    tim_info->tim->CCER &= ~tim_info->ccer_msk;
+    tim_info->tim->CCER |= tim_info->ccer;
+}
+
+void TIM_PWMTIMsInit(void) {
+    RCC->APB2ENR |= RCC_APB2ENR_TIM1EN;
+    RCC->APB1ENR |= RCC_APB1ENR_TIM5EN;
+
+    for (int i = 0; i < TIMERS_COUNT; i++) {
+        tims[i].tim->ARR = PWM_TIMER_ARR;
+        tims[i].tim->PSC = 0;
+        tims[i].tim->EGR |= TIM_EGR_UG;
+
+        tims[i].tim->CCMR1 &= ~tims[i].ccmr1_msk;
+        tims[i].tim->CCMR1 |= tims[i].ccmr1;
+
+        tims[i].tim->CCMR2 &= ~tims[i].ccmr2_msk;
+        tims[i].tim->CCMR2 |= tims[i].ccmr2;
+    }
+
+    TIM_EnableCounter(TIM1);
+    TIM_EnableCounter(TIM5);
+
+    TIM1->BDTR |= TIM_BDTR_MOE;
+
+    TIM_PWM_Enable(&tims[tim_info_index % TIMERS_COUNT]);
+    TIM_PWM_Enable(&tims[(tim_info_index + 1) % TIMERS_COUNT]);
+}
+
+// 10 milliseconds timer
+void TIM_DelayTIMInit(void) {
+    RCC->APB1ENR |= RCC_APB1ENR_TIM2EN;
+    NVIC_EnableIRQ(TIM2_IRQn);
+    TIM2->PSC = 15;
+    TIM2->ARR = 10000;
+
+    TIM_EnableCounter(TIM2);
+    TIM_EnableIT_UPDATE(TIM2);
+}
+
 void TIMs_PWM_ChangeDutyCicle(void) {
     TIM_PWM_ChangeDutyCicle(&dir_pwm1, PWM1_DUTY_PER_CICLE, &tims[tim_info_index % TIMERS_COUNT]);
     TIM_PWM_ChangeDutyCicle(&dir_pwm2, PWM2_DUTY_PER_CICLE, &tims[(tim_info_index + 1) % TIMERS_COUNT]);
@@ -129,9 +129,4 @@ void Change_PWM_TIMs(void) {
 
     TIM_PWM_Enable(&tims[tim_info_index % TIMERS_COUNT]);
     TIM_PWM_Enable(&tims[(tim_info_index + 1) % TIMERS_COUNT]);
-}
-
-void TIMs_Init(void) {
-    TIM2_Init();
-    TIM_PWMs_Init();
 }

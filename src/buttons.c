@@ -3,9 +3,6 @@
 
 #define BUTTON_PRESSED (GPIOC->IDR & GPIO_IDR_IDR_13)
 
-#define FALSE 0
-#define TRUE 1
-
 #define TICKS_FOR_LONG_PRESS 100
 #define TICKS_FOR_ONE_CLICK 10
 
@@ -20,6 +17,8 @@ void Button_Init(void) {
     GPIOC->PUPDR &= ~(GPIO_PUPDR_PUPDR13_0 | GPIO_PUPDR_PUPDR13_1);
     GPIOC->PUPDR |= GPIO_PUPDR_PUPDR13_1;
     GPIOC->OSPEEDR |= GPIO_OSPEEDER_OSPEEDR13;
+
+    Delay_AddFunction(Button_ClickManagerHandler, 1);
 }
 
 int Button_IsPressed(void) {

@@ -4,6 +4,7 @@
 #include "usart.h"
 #include "buttons.h"
 #include "gpio.h"
+#include "led.h"
 
 // PA0 - TIM5_CH1
 // PE9 - TIM1_CH1
@@ -18,11 +19,11 @@ int main() {
     USART3_GPIO_Init();
     USART3_Init();
 
-    GPIO_Init();
+    TIM_DelayTIMInit();
 
     Button_Init();
 
-    TIMs_Init();
+    LEDs_Init();
 
     while(1) {
 
@@ -30,15 +31,13 @@ int main() {
 }
 
 void ButtonClicked(void) {
-    Change_GPIOs();
-    Change_PWM_TIMs();
-    USART3_SendString("Single click\n\r");
+    LEDs_Switch();
 }
 
 void ButtonDoubleClicked(void) {
-    USART3_SendString("Double click\n\r");
+    LEDs_ToggleMode();
 }
 
 void ButtonLongPressed(void) {
-    USART3_SendString("Long press\n\r");
+
 }
